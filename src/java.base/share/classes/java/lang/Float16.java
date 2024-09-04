@@ -81,14 +81,11 @@ public final class Float16
     private static final long serialVersionUID = 16; // Not needed for a value class?
 
     // Functionality for future consideration:
-    // float16ToShortBits that normalizes NaNs, c.f. floatToIntBits vs floatToRawIntBits
     // copysign
     // scalb
     // nextUp / nextDown
     // IEEEremainder / remainder operator remainder
     // signum
-    // valueOf(BigDecimal) -- main implementation could be package private in BigDecimal
-
    /**
     * Returns a {@code Float16} instance wrapping IEEE 754 binary16
     * encoded {@code short} value.
@@ -571,6 +568,45 @@ public final class Float16
     @Override
     public double doubleValue() {
         return (double)floatValue();
+    }
+
+    /**
+     * Returns a representation of the specified floating-point value
+     * according to the IEEE 754 floating-point "binary16" bit
+     * layout.
+     *
+     * <p>Bit 15 (the bit that is selected by the mask
+     * {@code 0x80000000}) represents the sign of the floating-point
+     * number.
+     * Bits 14-10 (the bits that are selected by the mask
+     * {@code 0x7f800000}) represent the exponent.
+     * Bits 9-0 (the bits that are selected by the mask
+     * {@code 0x007fffff}) represent the significand (sometimes called
+     * the mantissa) of the floating-point number.
+     *
+     * <p>If the argument is positive infinity, the result is
+     * {@code 0x7C00}.
+     *
+     * <p>If the argument is negative infinity, the result is
+     * {@code 0xfC00}.
+     *
+     * <p>If the argument is NaN, the result is {@code 0x7E00}.
+     *
+     * <p>In all cases, the result is a short that, when given to the
+     * {@link #shortBitsToFloat16(short)} method, will produce a floating-point
+     * value the same as the argument to {@code float16ToShortBits}
+     * (except all NaN values are collapsed to a single
+     * "canonical" NaN value).
+     *
+     * @param   f16   an IEEE 754 binary16 floating-point number.
+     * @return the bits that represent the floating-point number.
+     */
+    //@IntrinsicCandidate
+    public static short float16ToShortBits(Float16 f16) {
+        if (!isNaN(f16)) {
+            return float16ToRawShortBits(f16);
+        }
+        return 0x7E00;
     }
 
     // Skipping for now:
